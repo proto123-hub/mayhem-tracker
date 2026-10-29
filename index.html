@@ -251,7 +251,7 @@ footer { margin-top: 14px; font-size: 12px; color: var(--dim); text-align: right
   </details>
 </div>
 </section>
-<footer>마지막 갱신 2026.10.29 18:48</footer>
+<footer>마지막 갱신 2026.10.29 18:49 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
 </main>
 <div id="tip" hidden></div>
 <script>
@@ -504,13 +504,39 @@ document.addEventListener("click", e => {
 });
 addEventListener("scroll", hideAug, { passive: true });
 
+const BUILD = "20261029184949";
+let currentTab = "all";
 function show(id) {
+  currentTab = id;
   document.querySelectorAll("section.tab").forEach(s => s.hidden = s.id !== "tab-" + id);
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === id));
   renderCharts(document.getElementById("tab-" + id));
 }
 document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
-show("all");
+let saved = null;  // 자동 새로고침 전에 보던 탭·스크롤
+try {
+  saved = JSON.parse(sessionStorage.getItem("mayhem-view"));
+  sessionStorage.removeItem("mayhem-view");
+} catch (e) {}
+show(saved && document.getElementById("tab-" + saved.tab) ? saved.tab : currentTab);
+if (saved) scrollTo(0, saved.y);
+
+setInterval(async () => {
+  let latest;
+  try {
+    const r = await fetch("version.txt?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    latest = (await r.text()).trim();
+  } catch (e) {
+    return;
+  }
+  if (!latest || latest === BUILD) return;
+  try {
+    sessionStorage.setItem("mayhem-view", JSON.stringify({ tab: currentTab, y: scrollY }));
+  } catch (e) {}
+  location.replace(location.pathname + "?v=" + latest);
+}, 60000);
+
 document.querySelectorAll("a.chip").forEach(a => a.addEventListener("click", e => {
   e.preventDefault();
   a.closest("section").querySelector("details").open = true;
