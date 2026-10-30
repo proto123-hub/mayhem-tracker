@@ -369,7 +369,7 @@ footer { margin-top: 14px; font-size: 12px; color: var(--dim); text-align: right
   <div class="ctool"><input id="sfilter" placeholder="목록에서 찾기" autocomplete="off" aria-label="목록에서 찾기">
     <div class="metrics" id="ssort"><button data-sort="fit" class="on">적합도</button><button data-sort="wr">승률</button><button data-sort="n">표본</button></div></div>
   <p class="hint">막대 = 적합도: 기준보다 이 조합의 승률이 얼마나 높은지 × 판수. 오른쪽 파랑 잘 맞음 · 왼쪽 빨강 안 맞음 ·
-    회색은 차이가 작거나 10판 미만. 줄을 누르면 그 챔피언·증강으로 가요.</p>
+    회색은 판수에 비해 차이가 우연일 수 있는 것(95% 확신 미만)이나 10판 미만. 줄을 누르면 그 챔피언·증강으로 가요.</p>
   <div id="slist"></div>
   <p class="note">우리가 만난 사람들(나·친구·같은 판 9명)의 최근 증바람 10,464판 기준이에요. 기준 승률은 증강 화면의 챔피언 줄이면
     그 챔피언 평균, 나머지는 지금 보는 챔피언·증강 평균이고, 판수가 적을수록 기준 쪽으로 보정해요.
@@ -386,12 +386,12 @@ footer { margin-top: 14px; font-size: 12px; color: var(--dim); text-align: right
     판을 누르면 10명 상세를 볼 수 있어요.</p>
 </div>
 </section>
-<footer>마지막 갱신 2026.10.30 20:31 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
+<footer>마지막 갱신 2026.10.30 20:34 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
 </main>
 <div id="game" hidden><div class="gbox">
   <div class="ghead"><b id="gtitle"></b><button id="gclose">닫기</button></div>
   <div id="gbody" class="gsides"></div>
-  <p class="hint">아이템 테두리: 파랑 = 그 챔피언에게 잘 맞는 템, 빨강 = 안 맞는 템 (챔피언 탭 적합도 기준)</p>
+  <p class="hint">아이템 테두리: 파랑 = 그 챔피언에게 잘 맞는 템, 빨강 = 안 맞는 템 (통계 탭에서 우연이 아닌 차이로 확인된 것만)</p>
 </div></div>
 <div id="tip" hidden></div>
 <script>
@@ -717,15 +717,18 @@ function pairRows(type, id, kind) {
   return e[kind].map(([x, n, w]) => {
     const base = type === "a" && kind === "ch" && ST.c[x] ? rate(ST.c[x]) : own;
     const adj = (w + FIT_PRIOR * base) / (n + FIT_PRIOR);
-    return { id: x, n, wr: w / n, base, diff: adj - base, fit: (adj - base) * n };
+    // z: 기준 승률과의 차이가 판수에 비해 얼마나 확실한지 (1.96 넘으면 95% 확신)
+    const z = (w / n - base) / Math.sqrt(Math.max(base * (1 - base), 0.01) / n);
+    return { id: x, n, wr: w / n, base, diff: adj - base, fit: (adj - base) * n, z };
   });
 }
-// 경기 상세 창의 아이템 테두리: 표본이 충분하고 보정 승률이 2%p 넘게 차이 나면 파랑(잘 맞음)·빨강(안 맞음)
+// 색은 우연으로 보기 어려운 차이(FIT_MIN판 이상, 95% 확신)만 칠한다. 적은 판수의 큰 승률 차이는 회색
+const strong = r => r.n >= FIT_MIN && Math.abs(r.z) >= 1.96;
+// 경기 상세 창의 아이템 테두리: 파랑(잘 맞음)·빨강(안 맞음), 같은 기준
 function fitClass(cid, itemId) {
   if (!ST.c[cid]) return "";
   const r = pairRows("c", cid, "it").find(r => r.id === itemId);
-  if (!r || r.n < FIT_MIN || Math.abs(r.diff) < 0.02) return "";
-  return r.diff > 0 ? "good" : "bad";
+  return r && strong(r) ? (r.diff > 0 ? "good" : "bad") : "";
 }
 function entName(type, id) {
   const v = type === "c" ? CHAMPS[id] && CHAMPS[id][0] : type === "a" ? AUGS[id] && AUGS[id].n : ITEMS[id] && ITEMS[id][0];
@@ -795,7 +798,6 @@ function renderStats() {
   const q = sfilter.value.trim().toLowerCase().replace(/\s+/g, "");
   const rows = pairRows(sType, sId, sKind)
     .filter(r => !q || entName(PAIR_TYPE[sKind], r.id).toLowerCase().replace(/\s+/g, "").includes(q));
-  const strong = r => r.n >= FIT_MIN && Math.abs(r.diff) >= 0.02;
   const key = { fit: r => (r.n >= FIT_MIN ? 1e9 : 0) + r.fit, wr: r => (r.n >= FIT_MIN ? 1e9 : 0) + r.wr, n: r => r.n }[sSort];
   rows.sort((a, b) => key(b) - key(a));
   const scale = Math.max(...rows.filter(r => r.n >= FIT_MIN).map(r => Math.abs(r.fit)), 1e-9);
@@ -843,7 +845,7 @@ document.getElementById("slist").addEventListener("keydown", e => {
 });
 setType("c");
 
-const BUILD = "20261030203153";
+const BUILD = "20261030203430";
 let currentTab = "all";
 function show(id) {
   currentTab = id;
