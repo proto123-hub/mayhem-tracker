@@ -16,7 +16,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 15px/1.5 "Pretendard", "Malgun Gothic", system-ui, sans-serif; }
-main { max-width: 640px; margin: 0 auto; padding: 24px 16px 40px; }
+main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 40px; }
 header { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin-bottom: 14px; }
 h1 { font-size: 20px; margin: 0; color: var(--muted); }
 h2 { font-size: 15px; font-weight: 500; color: var(--muted); margin: 24px 0 10px; }
@@ -94,6 +94,7 @@ summary { cursor: pointer; font-size: 17px; font-weight: 700; }
 .games td { border-top: 1px solid var(--line); font-size: 14px; }
 .games td:nth-child(2), .games th:nth-child(2) { text-align: left; }
 .games th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.games td + td, .games th + th { padding: 6px 4px; }
 .games tr.hit td { background: #3a3426; }
 .auglist { display: inline-flex; gap: 3px; }
 .tag { font-size: 11px; color: var(--gold); border: 1px solid var(--gold); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
@@ -386,7 +387,7 @@ footer { margin-top: 14px; font-size: 12px; color: var(--dim); text-align: right
     판을 누르면 10명 상세를 볼 수 있어요.</p>
 </div>
 </section>
-<footer>마지막 갱신 2026.10.31 10:43 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
+<footer>마지막 갱신 2026.10.31 10:55 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
 </main>
 <div id="game" hidden><div class="gbox">
   <div class="ghead"><b id="gtitle"></b><button id="gclose">닫기</button></div>
@@ -845,7 +846,7 @@ document.getElementById("slist").addEventListener("keydown", e => {
 });
 setType("c");
 
-const BUILD = "20261031104346";
+const BUILD = "20261031105543";
 let currentTab = "all";
 function show(id) {
   currentTab = id;
