@@ -580,7 +580,7 @@ footer { margin-top: 14px; font-size: 12px; color: var(--dim); text-align: right
     판을 누르면 10명 상세를 볼 수 있어요.</p>
 </div>
 </section>
-<footer>마지막 갱신 2026.11.03 20:55 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
+<footer>마지막 갱신 2026.11.03 20:59 · 열어 두면 새 기록이 올라올 때 자동으로 새로고침돼요</footer>
 </main>
 <div id="game" hidden><div class="gbox">
   <div class="ghead"><b id="gtitle"></b><button id="gclose">닫기</button></div>
@@ -589,6 +589,15 @@ footer { margin-top: 14px; font-size: 12px; color: var(--dim); text-align: right
 </div></div>
 <div id="tip" hidden></div>
 <script>
+// 아이콘은 CommunityDragon에서 바로 받는데, 서버가 느린 날 일부가 실패한다: 몇 초 간격으로 세 번까지 다시 받는다
+function retryImg(img) {
+  const n = +(img.dataset.retry || 0);
+  if (n >= 3) return;
+  img.dataset.retry = n + 1;
+  setTimeout(() => { img.src = img.src.split("?")[0] + "?r=" + (n + 1); }, 2000 * (n + 1));
+}
+document.addEventListener("error", e => { if (e.target instanceof HTMLImageElement) retryImg(e.target); }, true);
+document.querySelectorAll("img").forEach(img => { if (img.complete && img.src && !img.naturalWidth) retryImg(img); });
 
 const NS = "http://www.w3.org/2000/svg";
 const C = { blue: "#3987e5", red: "#e66767", orange: "#d95926", aqua: "#199e70",
@@ -1065,7 +1074,7 @@ document.getElementById("slist").addEventListener("keydown", e => {
 });
 setType("c");
 
-const BUILD = "20261103205517";
+const BUILD = "20261103205929";
 let currentTab = "all";
 function show(id) {
   currentTab = id;
